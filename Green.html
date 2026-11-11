@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบสั่งอาหารตามโต๊ะ - ภัตตาคารแซ่บคำโต</title>
+    <!-- Google Fonts: Prompt -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gold: #c5a059;
+            --primary-gold-hover: #d4af37;
+            --bg-dark: #0f1115;
+            --card-bg: #181a20;
+            --card-border: #2a2e37;
+            --text-gold: #e5c158;
+            --text-light: #f1f2f6;
+            --text-muted: #a0a5b1;
+            --secondary-accent: #2ed573;
+            --border-radius: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Prompt', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        header {
+            background: rgba(24, 26, 32, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(197, 160, 89, 0.2);
+            color: var(--text-gold);
+            padding: 1.2rem 1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            background: linear-gradient(135deg, #f39c12, #f1c40f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .admin-btn {
+            background: transparent;
+            border: 1px solid var(--primary-gold);
+            color: var(--text-gold);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .admin-btn:hover {
+            background: var(--primary-gold);
+            color: #000;
+            box-shadow: 0 0 15px rgba(197, 160, 89, 0.4);
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-bottom: 140px;
+        }
+
+        /* ตารางและกรอกหมายเลขโต๊ะ */
+        .table-banner {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 14px 22px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            gap: 15px;
+        }
+
+        .table-banner span {
+            color: var(--text-gold);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .table-input-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .table-input-group input {
+            background: #0f1115;
+            color: var(--text-gold);
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--primary-gold);
+            font-size: 1rem;
+            font-family: 'Prompt', sans-serif;
+            outline: none;
+            width: 130px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        /* หมวดหมู่เมนูอาหาร */
+        .categories {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .category-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            white-space: nowrap;
+            font-weight: 400;
+            color: var(--text-muted);
+            transition: all 0.3s ease;
+        }
+
+        .category-btn.active {
+            background: linear-gradient(135deg, var(--primary-gold), #b3873f);
+            color: #000;
+            font-weight: 600;
+            border-color: var(--primary-gold);
+            box-shadow: 0 4px 15px rgba(197, 160, 89, 0.3);
+        }
+
+        /* รายการสินค้า */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .menu-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(197, 160, 89, 0.5);
+        }
+
+        .menu-img {
+            width: 100%;
+            height: 165px;
+            object-fit: cover;
+            background-color: #2a2e37;
+        }
+
+        .menu-info {
+            padding: 16px;
+        }
+
+        .menu-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text-light);
+            margin-bottom: 6px;
+        }
+
+        .menu-price {
+            color: var(--text-gold);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .add-to-cart-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #2a2e37, #1f2229);
+            color: var(--text-gold);
+            border: none;
+            border-top: 1px solid var(--card-border);
+            padding: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .add-to-cart-btn:hover {
+            background: linear-gradient(135deg, var(--primary-gold), #b3873f);
+            color: #000;
+            font-weight: 600;
+        }
+
+        /* แถบลอยตะกร้าสินค้าด้านล่าง */
+        .cart-bar {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: rgba(24, 26, 32, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid var(--primary-gold);
+            padding: 16px 24px;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 99;
+        }
+
+        .cart-info {
+            font-size: 1.05rem;
+            font-weight: 500;
+            color: var(--text-light);
+        }
+
+        .checkout-btn {
+            background: linear-gradient(135deg, var(--primary-gold), #b3873f);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1rem;
+            box-shadow: 0 4px 15px rgba(197, 160, 89, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .checkout-btn:hover {
+            transform: scale(1.03);
+            box-shadow: 0 6px 20px rgba(197, 160, 89, 0.5);
+        }
+
+        /* แถบสถานะออร์เดอร์ล่าสุดสำหรับลูกค้า (พร้อมปุ่มยกเลิก) */
+        .active-order-banner {
+            position: fixed;
+            bottom: 75px; left: 20px; right: 20px;
+            max-width: 920px;
+            margin: 0 auto;
+            background: rgba(24, 26, 32, 0.95);
+            border: 1px solid var(--primary-gold);
+            border-radius: 12px;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            z-index: 98;
+        }
+
+        .cancel-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.85rem;
+            transition: 0.3s;
+        }
+
+        .cancel-btn:hover {
+            background: #ff6b81;
+        }
+
+        /* หน้าหลังบ้าน (Merchant Dashboard) */
+        #merchant-view {
+            display: none;
+            padding-top: 10px;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 15px;
+        }
+
+        .back-btn {
+            background: transparent;
+            border: 1px solid var(--text-muted);
+            color: var(--text-light);
+            padding: 8px 18px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .back-btn:hover {
+            background: var(--text-light);
+            color: #000;
+        }
+
+        .order-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            border-left: 5px solid var(--primary-gold);
+        }
+
+        .order-card.completed {
+            border-left-color: var(--secondary-accent);
+            opacity: 0.6;
+        }
+
+        .order-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .status-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        .btn-success { background-color: var(--secondary-accent); color: #000; font-weight: 600; }
+        .btn-danger { background-color: #ff4757; color: white; }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-light);
+            width: 90%;
+            max-width: 480px;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 12px;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.4rem;
+            cursor: pointer;
+        }
+
+        .cart-item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            border-bottom: 1px dashed var(--card-border);
+            padding-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>✨ ภัตตาคารแซ่บคำโต (Grand Cuisine)</h1>
+        <button class="admin-btn" onclick="openMerchantDashboard()">🔒 หลังบ้าน (พนักงาน)</button>
+    </header>
+
+    <div id="customer-view" class="container">
+        <!-- ช่องระบุเลขโต๊ะแบบพิมพ์ -->
+        <div class="table-banner">
+            <span>📍 กรุณาระบุหมายเลขโต๊ะอาหาร:</span>
+            <div class="table-input-group">
+                <span>โต๊ะที่</span>
+                <input type="text" id="table-number-input" placeholder="เช่น 1 หรือ VIP" value="1">
+            </div>
+        </div>
+
+        <div class="categories">
+            <button class="category-btn active" onclick="filterMenu('all', this)">ทั้งหมด</button>
+            <button class="category-btn" onclick="filterMenu('seafood', this)">ซีฟู้ดพรีเมียม</button>
+            <button class="category-btn" onclick="filterMenu('food', this)">อาหารจานเดียว</button>
+            <button class="category-btn" onclick="filterMenu('soup', this)">ต้มยำ/แกง</button>
+            <button class="category-btn" onclick="filterMenu('appetizer', this)">ของทานเล่น</button>
+            <button class="category-btn" onclick="filterMenu('drink', this)">เครื่องดื่ม</button>
+        </div>
+
+        <div class="menu-grid" id="menu-grid">
+            <!-- โหลดรายการอาหารผ่าน JS -->
+        </div>
+    </div>
+
+    <!-- แถบแสดงออร์เดอร์ที่เพิ่งสั่ง (พร้อมปุ่มยกเลิก) -->
+    <div class="active-order-banner" id="active-order-banner" style="display: none;">
+        <div>
+            <span style="color:var(--text-gold); font-weight:600;">ออร์เดอร์ล่าสุด (โต๊ะ <span id="active-order-table">-</span>):</span>
+            <span id="active-order-status" style="color:var(--text-light); margin-left:8px;">กำลังส่งห้องครัว...</span>
+            <small style="display:block; color:var(--text-muted);" id="cancel-timer-text">สามารถยกเลิกได้ภายใน 60 วินาที</small>
+        </div>
+        <button class="cancel-btn" id="cancel-order-btn" onclick="cancelCurrentOrder()">✕ ยกเลิกออร์เดอร์</button>
+    </div>
+
+    <div class="cart-bar" id="cart-bar" style="display: none;">
+        <div class="cart-info">
+            <span id="cart-count">0</span> รายการ | ยอดรวม: <span id="cart-total" style="color: var(--text-gold); font-weight:700;">0</span> บาท
+        </div>
+        <button class="checkout-btn" onclick="openCartModal()">ดูรายการ / ยืนยันสั่งซื้อ</button>
+    </div>
+
+    <div id="merchant-view" class="container">
+        <div class="dashboard-header">
+            <h2>👨‍🍳 ระบบจัดการห้องครัว (Merchant Dashboard)</h2>
+            <button class="back-btn" onclick="closeMerchantDashboard()">กลับหน้าสั่งอาหาร</button>
+        </div>
+        <div id="merchant-orders-list">
+            <p style="text-align: center; color: var(--text-muted);">ยังไม่มีรายการสั่งซื้อใหม่เข้ามา</p>
+        </div>
+    </div>
+
+    <div class="modal" id="cart-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🛒 ตะกร้าสินค้าของคุณ</h3>
+                <button class="close-modal" onclick="closeCartModal()">✕</button>
+            </div>
+            <div id="cart-items-container"></div>
+            <div style="margin-top: 20px; font-weight: 600; text-align: right; font-size: 1.1rem;">
+                ยอดรวมทั้งสิ้น: <span id="modal-total" style="color: var(--text-gold);">0</span> บาท
+            </div>
+            <button class="checkout-btn" style="width: 100%; margin-top: 20px; border-radius: 12px;" onclick="checkoutOrder()">ส่งรายการเข้าห้องครัว</button>
+        </div>
+    </div>
+
+    <script>
+        const menuData = [
+            { id: 1, name: "กุ้งผัดย่างเนยกระเทียม", price: 320, category: "seafood", img: "https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?auto=format&fit=crop&w=600&q=80" },
+            { id: 2, name: "ปลากะพงทอดน้ำปลาพรีเมียม", price: 390, category: "seafood", img: "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&w=600&q=80" },
+            { id: 3, name: "ปูผัดผงกะหรี่เข้มข้น", price: 450, category: "seafood", img: "https://images.unsplash.com/photo-1559847844-5315695dadae?auto=format&fit=crop&w=600&q=80" },
+            { id: 4, name: "หอยเชลล์ย่างชีสซอสกระเทียม", price: 280, category: "seafood", img: "https://images.unsplash.com/photo-1625943553852-781c6dd46faa?auto=format&fit=crop&w=600&q=80" },
+            { id: 5, name: "ข้าวผัดกุ้งลายเสือพรีเมียม", price: 120, category: "food", img: "https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=600&q=80" },
+            { id: 6, name: "กะเพราเนื้อวากิวไข่ดาว", price: 160, category: "food", img: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=600&q=80" },
+            { id: 7, name: "ผัดไทยกุ้งแม่น้ำซอสมะขาม", price: 150, category: "food", img: "https://images.unsplash.com/photo-1559847844-5315695dadae?auto=format&fit=crop&w=600&q=80" },
+            { id: 8, name: "ข้าวอบสับปะรดเครื่องซีฟู้ด", price: 180, category: "food", img: "https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=600&q=80" },
+            { id: 9, name: "ต้มยำกุ้งแม่น้ำน้ำข้นโบราณ", price: 220, category: "soup", img: "https://images.unsplash.com/photo-1548943487-a2e4e43b4853?auto=format&fit=crop&w=600&q=80" },
+            { id: 10, name: "แกงเขียวหวานไก่โรตีทอง", price: 140, category: "soup", img: "https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?auto=format&fit=crop&w=600&q=80" },
+            { id: 11, name: "ต้มแซ่บซี่โครงหมูอ่อนหม้อไฟ", price: 190, category: "soup", img: "https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&w=600&q=80" },
+            { id: 12, name: "ถุงทองไส้กุ้งสับทรงเครื่อง", price: 120, category: "appetizer", img: "https://images.unsplash.com/photo-1541544741938-0af808871cc0?auto=format&fit=crop&w=600&q=80" },
+            { id: 13, name: "ปีกไก่ทอดสมุนไพรเกลือหิมาลัย", price: 110, category: "appetizer", img: "https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=600&q=80" },
+            { id: 14, name: "ชาไทยเย็นสูตรพรีเมียมเข้มข้น", price: 55, category: "drink", img: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=600&q=80" },
+            { id: 15, name: "น้ำมะพร้าวสดลูกปั่นสมูทตี้", price: 65, category: "drink", img: "https://images.unsplash.com/photo-1525385133512-2f3bdd039054?auto=format&fit=crop&w=600&q=80" },
+            { id: 16, name: "น้ำอัญชันมะนาวโซดา", price: 50, category: "drink", img: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=600&q=80" }
+        ];
+
+        let cart = [];
+        let orders = [];
+        let currentActiveOrderId = null;
+        let cancelTimer = null;
+        let countdownSeconds = 60;
+
+        window.onload = function() {
+            displayMenu(menuData);
+        };
+
+        function displayMenu(items) {
+            const grid = document.getElementById("menu-grid");
+            grid.innerHTML = "";
+            items.forEach(item => {
+                grid.innerHTML += `
+                    <div class="menu-card">
+                        <img src="${item.img}" class="menu-img" alt="${item.name}">
+                        <div class="menu-info">
+                            <div class="menu-title">${item.name}</div>
+                            <div class="menu-price">${item.price} บาท</div>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart(${item.id})">+ เพิ่มลงตะกร้า</button>
+                    </div>
+                `;
+            });
+        }
+
+        function filterMenu(category, btn) {
+            document.querySelectorAll(".category-btn").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+
+            if(category === 'all') {
+                displayMenu(menuData);
+            } else {
+                const filtered = menuData.filter(item => item.category === category);
+                displayMenu(filtered);
+            }
+        }
+
+        function addToCart(id) {
+            const product = menuData.find(item => item.id === id);
+            const existing = cart.find(item => item.id === id);
+            if(existing) {
+                existing.qty += 1;
+            } else {
+                cart.push({ ...product, qty: 1 });
+            }
+            updateCartBar();
+        }
+
+        function updateCartBar() {
+            const cartBar = document.getElementById("cart-bar");
+            const totalCount = cart.reduce((sum, item) => sum + item.qty, 0);
+            const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+
+            if(totalCount > 0) {
+                cartBar.style.display = "flex";
+                document.getElementById("cart-count").innerText = totalCount;
+                document.getElementById("cart-total").innerText = totalPrice;
+            } else {
+                cartBar.style.display = "none";
+            }
+        }
+
+        function openCartModal() {
+            const container = document.getElementById("cart-items-container");
+            container.innerHTML = "";
+            let totalPrice = 0;
+
+            cart.forEach((item, index) => {
+                totalPrice += item.price * item.qty;
+                container.innerHTML += `
+                    <div class="cart-item-row">
+                        <div>
+                            <strong style="color:var(--text-light);">${item.name}</strong><br>
+                            <small style="color:var(--text-muted);">${item.price} บาท x ${item.qty}</small>
+                        </div>
+                        <div>
+                            <span style="color:var(--text-gold); font-weight:600;">${item.price * item.qty} ฿</span>
+                            <button onclick="removeFromCart(${index})" style="background:#ff4757; color:white; border:none; padding:4px 10px; border-radius:6px; margin-left:12px; cursor:pointer;">ลบ</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById("modal-total").innerText = totalPrice;
+            document.getElementById("cart-modal").style.display = "flex";
+        }
+
+        function closeCartModal() {
+            document.getElementById("cart-modal").style.display = "none";
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCartBar();
+            openCartModal();
+        }
+
+        function checkoutOrder() {
+            if(cart.length === 0) return;
+            
+            const tableVal = document.getElementById("table-number-input").value.trim();
+            if(!tableVal) {
+                alert("กรุณากรอกหมายเลขโต๊ะอาหารก่อนสั่งซื้อครับ!");
+                return;
+            }
+
+            const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            
+            // ป๊อปอัปยืนยันการสั่งซื้อและหมายเลขโต๊ะเพื่อป้องกันการสั่งผิดโต๊ะ
+            const confirmMsg = `ยืนยันการสั่งอาหารสำหรับ "โต๊ะ ${tableVal}"\nยอดรวมทั้งสิ้น: ${totalPrice} บาท\n\n(หากหมายเลขโต๊ะถูกต้อง ให้กด OK เพื่อส่งรายการ)`;
+            if (!confirm(confirmMsg)) {
+                return;
+            }
+
+            const newOrderId = Date.now();
+            const newOrder = {
+                id: newOrderId,
+                table: tableVal,
+                items: [...cart],
+                total: totalPrice,
+                status: "กำลังเตรียมอาหาร"
+            };
+
+            orders.push(newOrder);
+            currentActiveOrderId = newOrderId;
+            
+            cart = [];
+            updateCartBar();
+            closeCartModal();
+
+            // แสดงแถบสถานะออร์เดอร์และปุ่มยกเลิกสำหรับลูกค้า
+            showActiveOrderBanner(tableVal);
+        }
+
+        function showActiveOrderBanner(tableVal) {
+            document.getElementById("active-order-table").innerText = tableVal;
+            document.getElementById("active-order-banner").style.display = "flex";
+            document.getElementById("cancel-order-btn").style.display = "block";
+            
+            countdownSeconds = 60;
+            clearInterval(cancelTimer);
+
+            cancelTimer = setInterval(() => {
+                countdownSeconds--;
+                if (countdownSeconds > 0) {
+                    document.getElementById("cancel-timer-text").innerText = `สามารถยกเลิกออร์เดอร์ได้ภายใน ${countdownSeconds} วินาที`;
+                } else {
+                    clearInterval(cancelTimer);
+                    document.getElementById("cancel-timer-text").innerText = `ห้องครัวรับออร์เดอร์เรียบร้อยแล้ว`;
+                    document.getElementById("cancel-order-btn").style.display = "none";
+                }
+            }, 1000);
+        }
+
+        function cancelCurrentOrder() {
+            if (!currentActiveOrderId) return;
+            
+            if (confirm("คุณต้องการยกเลิกคำสั่งซื้อนี้ใช่หรือไม่?")) {
+                orders = orders.filter(o => o.id !== currentActiveOrderId);
+                clearInterval(cancelTimer);
+                document.getElementById("active-order-banner").style.display = "none";
+                currentActiveOrderId = null;
+                alert("ยกเลิกคำสั่งซื้อเรียบร้อยแล้ว!");
+            }
+        }
+
+        const MERCHANT_PIN = "1234";
+
+        function openMerchantDashboard() {
+            const inputPin = prompt("กรุณากรอกรหัส PIN สำหรับเข้าสู่ระบบหลังบ้าน (PIN: 1234):");
+            if (inputPin === null) return;
+
+            if (inputPin === MERCHANT_PIN) {
+                document.getElementById("customer-view").style.display = "none";
+                document.getElementById("cart-bar").style.display = "none";
+                document.getElementById("active-order-banner").style.display = "none";
+                document.getElementById("merchant-view").style.display = "block";
+                renderMerchantOrders();
+            } else {
+                alert("รหัส PIN ไม่ถูกต้อง!");
+            }
+        }
+
+        function closeMerchantDashboard() {
+            document.getElementById("merchant-view").style.display = "none";
+            document.getElementById("customer-view").style.display = "block";
+            updateCartBar();
+            if (currentActiveOrderId && countdownSeconds > 0) {
+                document.getElementById("active-order-banner").style.display = "flex";
+            }
+        }
+
+        function renderMerchantOrders() {
+            const listContainer = document.getElementById("merchant-orders-list");
+            if(orders.length === 0) {
+                listContainer.innerHTML = `<p style="text-align: center; color: var(--text-muted);">ยังไม่มีรายการสั่งซื้อใหม่เข้ามา</p>`;
+                return;
+            }
+
+            listContainer.innerHTML = "";
+            orders.forEach(order => {
+                let itemsList = order.items.map(i => `<li>${i.name} x ${i.qty}</li>`).join("");
+                listContainer.innerHTML += `
+                    <div class="order-card ${order.status === 'เสร็จสิ้น' ? 'completed' : ''}">
+                        <h3 style="color:var(--text-gold);">📍 โต๊ะ ${order.table} (ออร์เดอร์ #${order.id.toString().slice(-4)})</h3>
+                        <p style="margin-top:8px;"><strong>รายการอาหาร:</strong></p>
+                        <ul style="padding-left:20px; color:var(--text-muted); margin-bottom:8px;">${itemsList}</ul>
+                        <p><strong>ยอดรวม:</strong> <span style="color:var(--text-gold);">${order.total} บาท</span> | <strong>สถานะ:</strong> ${order.status}</p>
+                        <div class="order-actions">
+                            <button class="status-btn btn-success" onclick="updateOrderStatus(${order.id}, 'เสร็จสิ้น')">ทำเสร็จเรียบร้อย</button>
+                            <button class="status-btn btn-danger" onclick="deleteOrder(${order.id})">ลบออร์เดอร์</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function updateOrderStatus(id, status) {
+            const order = orders.find(o => o.id === id);
+            if(order) {
+                order.status = status;
+                renderMerchantOrders();
+            }
+        }
+
+        function deleteOrder(id) {
+            orders = orders.filter(o => o.id !== id);
+            renderMerchantOrders();
+        }
+    </script>
+</body>
+</html>
